@@ -2,11 +2,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.24</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>17.0.1</version>
+        </dependency>
+    </dependencies>
     <parent>
         <groupId>cn.edu.sustech.cs209.chatting</groupId>
         <artifactId>chatting</artifactId>
         <version>dev-SNAPSHOT</version>
     </parent>
+
 
     <artifactId>chatting-common</artifactId>
 </project>
