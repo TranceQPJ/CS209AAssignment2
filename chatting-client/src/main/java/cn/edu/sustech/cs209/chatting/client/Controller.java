@@ -1,11 +1,9 @@
 package cn.edu.sustech.cs209.chatting.client;
 
-import cn.edu.sustech.cs209.chatting.common.ChatMessage;
-import cn.edu.sustech.cs209.chatting.common.Command;
-import cn.edu.sustech.cs209.chatting.common.Communication;
-import cn.edu.sustech.cs209.chatting.common.Information;
+import cn.edu.sustech.cs209.chatting.common.*;
 import cn.edu.sustech.cs209.chatting.domain.User;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -15,17 +13,18 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Pair;
 import lombok.SneakyThrows;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -42,6 +41,19 @@ public class Controller implements Initializable {
     @FXML
     ListView<ChatMessage> chatContentListView;
 
+    @FXML
+    public Button F601;
+    @FXML
+    public Button F602;
+    @FXML
+    public Button F603;
+    @FXML
+    public Button F604;
+    @FXML
+    public Button F605;
+    @FXML
+    public Button F606;
+
     @SneakyThrows
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -51,6 +63,7 @@ public class Controller implements Initializable {
     }
 
     private void initUI() throws IOException, InterruptedException {
+        //customize show style
         chatContentListView.setCellFactory(new MessageCellFactory());
         chatListView.setCellFactory(new Callback<>() {
             @Override
@@ -78,6 +91,24 @@ public class Controller implements Initializable {
             }
             System.out.println(chatContentListView.getItems());
         });
+
+        //add listener
+        chatContentListView.setOnMouseClicked(event -> {
+            int index = chatContentListView.getSelectionModel().getSelectedIndex();
+            System.out.println("message of " + index + " is selected");
+            if (index < 0)
+                return;
+            ChatMessage message = chatContentListView.getItems().get(index);
+            if (message instanceof FileMessage file) {
+                FileChooser fileChooser = new FileChooser();
+                File f = fileChooser.showSaveDialog(null);
+                try (FileOutputStream stream = new FileOutputStream(f)) {
+                    stream.write(file.content());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
         chatListView.setOnMouseClicked(event -> {
             int index = chatListView.getSelectionModel().getSelectedIndex();
             System.out.println("index " + index + " is selected");
@@ -85,16 +116,15 @@ public class Controller implements Initializable {
             if (index >= 0) {
                 chatContentListView.getItems().addAll(chatListView.getItems().get(index).getValue().getValue().getItems());
             }
-            System.out.println(chatContentListView.getItems());
         });
         Map<Integer, Pair<List<ChatMessage>, List<User>>> chats = sendAndReceive(new Command.RequestAllChats(currentUser.username()), Command.ResponseAllChats.class).chats();
         System.out.println("init all chats!");
-        System.out.println("-----");
+//        System.out.println("-----");
         for (Map.Entry<Integer, Pair<List<ChatMessage>, List<User>>> entry : chats.entrySet()) {
-            System.out.println(entry);
-            boolean b = addChatInitMessages(entry.getKey(), entry.getValue().getKey(), entry.getValue().getValue());
+//            System.out.println(entry);
+            addChatInitMessages(entry.getKey(), entry.getValue().getKey(), entry.getValue().getValue());
         }
-        System.out.println("----");
+//        System.out.println("----");
     }
 
     private boolean addChatInitMessages(Integer chatId, List<ChatMessage> messages, List<User> users) {
@@ -148,6 +178,47 @@ public class Controller implements Initializable {
         currentUsername.setText(this.currentUser.username());
     }
 
+    public void doSendFile() {
+        FileChooser fileChooser = new FileChooser();
+
+        File selectedFile = fileChooser.showOpenDialog(null);
+        File init = new File("file:D:/ProgramProjects/JavaProgram/CS209A/assignment2/chatting-client/src/main/resources");
+        System.out.println(init.exists());
+        fileChooser.setInitialDirectory(init);
+        // handle selected file
+        if (selectedFile == null)
+            return;
+        System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+        try {
+            byte[] fileBytes = Files.readAllBytes(selectedFile.toPath());
+            send(new FileMessage(Communication.timestamp(), currentUser, getChatId(), selectedFile, fileBytes));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void appendEmoji(ActionEvent event) {
+        Object source = event.getSource();
+        if (source instanceof Button button) {
+            byte[] byteArray = null;
+            if (button == F601)
+                byteArray = new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x98, (byte) 0x81};
+            else if (button == F602)
+                byteArray = new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x98, (byte) 0x82};
+            else if (button == F603)
+                byteArray = new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x98, (byte) 0x83};
+            else if (button == F604)
+                byteArray = new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x98, (byte) 0x84};
+            else if (button == F605)
+                byteArray = new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x98, (byte) 0x85};
+            else if (button == F606)
+                byteArray = new byte[]{(byte) 0xF0, (byte) 0x9F, (byte) 0x98, (byte) 0x86};
+
+            if (byteArray != null)
+                inputArea.appendText(new String(byteArray, StandardCharsets.UTF_8));
+        }
+    }
+
     private enum LoginType {
         LOGIN, REGISTER
     }
@@ -198,7 +269,7 @@ public class Controller implements Initializable {
 
     public void initConnection() throws IOException {
         connect(Communication.HOST, Communication.PORT);
-        handler = new MessageHandler(in, out, queue, chatListView, currentOnlineCnt);
+        handler = new MessageHandler(in, out, queue, chatListView, currentOnlineCnt, files);
         new Thread(handler).start();
     }
 
@@ -399,16 +470,21 @@ public class Controller implements Initializable {
             new Alert(Alert.AlertType.INFORMATION, "can't send empty message!", ButtonType.OK).showAndWait();
             return;
         }
-        if (chatListView.getSelectionModel().getSelectedIndex() == -1) {
-            System.out.println("user not selected!");
-            return;
-        }
+        int chatId = getChatId();
         try {
-            send(new ChatMessage(Communication.timestamp(), currentUser, chatListView.getItems().get(chatListView.getSelectionModel().getSelectedIndex()).getKey(), content));
+            send(new ChatMessage(Communication.timestamp(), currentUser, chatId, content));
         } catch (IOException e) {
             e.printStackTrace();
         }
         inputArea.setText("");
+    }
+
+    private int getChatId() {
+        if (chatListView.getSelectionModel().getSelectedIndex() == -1) {
+            new Alert(Alert.AlertType.INFORMATION, "chat channel not selected!", ButtonType.OK).showAndWait();
+            return -1;
+        }
+        return chatListView.getItems().get(chatListView.getSelectionModel().getSelectedIndex()).getKey();
     }
 
     /**
@@ -454,6 +530,8 @@ public class Controller implements Initializable {
         }
     }
 
+    private final List<FileMessage> files = new ArrayList<>();
+
     private class MessageHandler implements Runnable {
         private ObjectInputStream in;
         private ObjectOutputStream out;
@@ -461,15 +539,18 @@ public class Controller implements Initializable {
         public final BlockingQueue<Information> queue;
         public final ListView<Pair<Integer, Pair<List<User>, ListView<ChatMessage>>>> chatListView;
         public final Label currentOnlineCnt;
+        public final List<FileMessage> files;
 
         public MessageHandler(ObjectInputStream in, ObjectOutputStream out,
                               BlockingQueue<Information> queue,
-                              ListView<Pair<Integer, Pair<List<User>, ListView<ChatMessage>>>> chatListView, Label currentOnlineCnt) {
+                              ListView<Pair<Integer, Pair<List<User>, ListView<ChatMessage>>>> chatListView,
+                              Label currentOnlineCnt, List<FileMessage> files) {
             this.in = in;
             this.out = out;
             this.queue = queue;
             this.chatListView = chatListView;
             this.currentOnlineCnt = currentOnlineCnt;
+            this.files = files;
         }
 
         @Override
@@ -480,10 +561,11 @@ public class Controller implements Initializable {
                     Object object = in.readObject();
                     if (object instanceof ChatMessage chatMessage) {
                         System.out.println("Received message " + chatMessage);
+                        if (chatMessage instanceof FileMessage file)
+                            files.add(file);
                         Platform.runLater(
                                 () -> {
                                     addMessageTo(chatMessage.chatId(), chatMessage, chatListView);
-//                                    int old = chatListView.getSelectionModel().getSelectedIndex();
                                     chatListView.getSelectionModel().select(-1);
                                     chatListView.getSelectionModel().select(indexOfChat(chatListView, chatMessage.chatId()));
                                 }

@@ -28,7 +28,6 @@ public class Main extends Application {
     public void stop() throws Exception {
         System.out.println("client stopped!");
         controller = fxmlLoader.getController();
-        System.out.println(controller);
         if (controller != null)
             controller.disconnect();
         super.stop();
