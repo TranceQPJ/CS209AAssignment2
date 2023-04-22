@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class Controller implements Initializable {
 
@@ -120,8 +121,16 @@ public class Controller implements Initializable {
         Map<Integer, Pair<List<ChatMessage>, List<User>>> chats = sendAndReceive(new Command.RequestAllChats(currentUser.username()), Command.ResponseAllChats.class).chats();
         System.out.println("init all chats!");
 //        System.out.println("-----");
-        for (Map.Entry<Integer, Pair<List<ChatMessage>, List<User>>> entry : chats.entrySet()) {
-//            System.out.println(entry);
+        Set<Map.Entry<Integer, Pair<List<ChatMessage>, List<User>>>> set = chats.entrySet()
+                .stream()
+                .sorted(Comparator.comparing(entry -> -entry.getValue()
+                        .getKey()
+                        .stream()
+                        .map(ChatMessage::timestamp)
+                        .max(Comparator.comparingLong(Long::longValue))
+                        .orElse(-1L)))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        for (Map.Entry<Integer, Pair<List<ChatMessage>, List<User>>> entry : set) {
             addChatInitMessages(entry.getKey(), entry.getValue().getKey(), entry.getValue().getValue());
         }
 //        System.out.println("----");
@@ -473,8 +482,7 @@ public class Controller implements Initializable {
         int chatId = getChatId();
         try {
             send(new ChatMessage(Communication.timestamp(), currentUser, chatId, content));
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignored) {
         }
         inputArea.setText("");
     }
@@ -566,8 +574,11 @@ public class Controller implements Initializable {
                         Platform.runLater(
                                 () -> {
                                     addMessageTo(chatMessage.chatId(), chatMessage, chatListView);
+                                    Pair<Integer, Pair<List<User>, ListView<ChatMessage>>> chat = chatListView.getItems().get(indexOfChat(chatListView, chatMessage.chatId()));
+                                    chatListView.getItems().remove(chat);
+                                    chatListView.getItems().add(0, chat);
                                     chatListView.getSelectionModel().select(-1);
-                                    chatListView.getSelectionModel().select(indexOfChat(chatListView, chatMessage.chatId()));
+                                    chatListView.getSelectionModel().select(0);
                                 }
                         );
                     } else if (object instanceof Command.UpdateOnlineUserNumber update) {
@@ -596,8 +607,17 @@ public class Controller implements Initializable {
                     }
 
                 } catch (SocketException e) {
-                    Platform.runLater(() -> new Alert(Alert.AlertType.INFORMATION, "server closed!", ButtonType.OK).showAndWait());
-                    System.out.println("socket closed!");
+//                    e.printStackTrace();
+                    Platform.runLater(() ->
+                            {
+                                try {
+                                    new Alert(Alert.AlertType.INFORMATION, "server closed!", ButtonType.OK)
+                                            .showAndWait();
+                                } catch (Exception ignored) {
+                                }
+                            }
+                    );
+//                    System.out.println("socket closed!");
                     break;
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();

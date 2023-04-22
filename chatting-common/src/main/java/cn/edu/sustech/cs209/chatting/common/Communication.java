@@ -25,14 +25,15 @@ public final class Communication {
 //     * UserA, UserB, UserC... (10)
 //     * If there are <= 3 users: do not display the ellipsis, for example:
 //     * UserA, UserB (2)
-        String name = collection.stream()
+        /*String name = collection.stream()
                 .map(User::username)
                 .sorted()
                 .limit(3)
                 .reduce((s, s2) -> s + ", " + s2).get();
         if (collection.size() > 3)
             name += "...";
-        return name + "(" + collection.size() + ")";
+        return name + "(" + collection.size() + ")";*/
+        return toChatName(collection);
     }
 
     public static String toChatName(Collection<User> collection) {
