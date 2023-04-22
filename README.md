@@ -8,13 +8,14 @@ In this assignment, you will need to implement a WeChat like program, but much s
 
 ## Quickstart
 
-Click the [use template](https://github.com/hezean/chatting/generate) to create a fork of this template - to avoid potential plagiarism dispute,
+Click the [use template](https://github.com/hezean/chatting/generate) to create a fork of this template - to avoid
+potential plagiarism dispute,
 **please be sure that your repository is made _private_ before the deadline**.
 
 > We also provide you a template with `lombok` that makes your code shorter and more elegant.
 > To use that, make sure you've checked the **Include all branches** option when creating your fork.
 > Then merge the `lombok` branch into `main`.
-> 
+>
 > **You must submit all your code to the `main` branch.**
 
 You need to then clone your fork into local machine. You can then open the whole folder as a project in your
@@ -59,6 +60,7 @@ and run the `main` method to start a client.
 Note that you can start multiple clients by clicking the _run_ button several times.
 
 If you are using JDK in any higher version, please use the `javafx` plugin to run the client.
+
 ```shell
 mvn javafx:run -pl chatting-client
 ```

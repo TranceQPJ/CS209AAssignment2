@@ -7,4 +7,6 @@ import java.sql.Timestamp;
 /**
  * This is used for the database!!!
  */
-public record Message(int messageId, String messageContent, int chatId, int senderId, Timestamp sentTime)implements Serializable {}
+public record Message(int messageId, String messageContent, int chatId, int senderId, Timestamp sentTime)
+        implements Serializable {
+}
